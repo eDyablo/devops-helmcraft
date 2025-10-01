@@ -76,4 +76,41 @@ helmfiles:
       - helmfileDirPath: {{ .path | dir }}
         infrastructureDirPath: {{ $infrastructureDirPath }}
         rootDirPath: {{ $rootDirPath }}
+        templatesDirPath: {{
+          list
+            $rootDirPath
+            ($.Values | getOrNil "templatesDirPath" | default "templates")
+          | join "/"
+        }}
+      - helpers:
+          shortName: |-
+            {{`{{- $length := index . 0 }}`}}
+            {{`{{- $name := index . 1 }}`}}
+            {{`{{- if le (len $name) $length }}`}}
+              {{`{{- $name }}`}}
+            {{`{{- else }}`}}
+              {{`{{- $digest := $name | sha1sum }}`}}
+              {{`{{-
+                (list
+                  ($name | trunc (sub $length 6 | int) | trimSuffix "-")
+                  ($digest | trunc -5)
+                  | compact | join "-"
+                )
+              }}`}}
+            {{`{{- end }}`}}
+          releaseName: |-
+            {{`{{- $context := index . 0 }}`}}
+            {{`{{- $name := index . 1 | toString }}`}}
+            {{`{{- $nameMaxLength := 53 }}`}}
+            {{`{{- $namePrefix := $context.Values | getOrNil "releaseNamePrefix" }}`}}
+            {{`{{- $nameSuffix := $context.Values | getOrNil "releaseNameSuffix" }}`}}
+            {{`{{- tpl $context.Values.helpers.shortName
+              (list
+                $nameMaxLength
+                (list
+                  $namePrefix $name $nameSuffix
+                  | compact | join ""
+                )
+              )
+            }}`}}
 {{- end }}

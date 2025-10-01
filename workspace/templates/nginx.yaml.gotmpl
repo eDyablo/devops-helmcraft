@@ -1,0 +1,16 @@
+repositories:
+  - name: bitnami.com
+    url: https://charts.bitnami.com/bitnami/
+
+templates:
+  nginx:
+    inherit:
+      - template: basic
+    chart: bitnami.com/nginx
+    name: {{ tpl .Values.helpers.releaseName (list . "nginx") }}
+    values:
+      {{- with .Values | getOrNil "nginx" }}
+      - {{ . | toYaml | trim | nindent 8 }}
+      {{- end }}
+    version: 21.1.23
+    

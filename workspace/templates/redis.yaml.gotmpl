@@ -1,0 +1,46 @@
+repositories:
+  - name: bitnami.com
+    url: https://charts.bitnami.com/bitnami/
+
+templates:
+  redis:
+    inherit:
+      - template: basic
+    chart: bitnami.com/redis
+    name: {{ tpl .Values.helpers.releaseName (list . "redis") }}
+    set:
+      {{- with
+        list
+          (.Values.kubeContext | printf "--context=%s")
+          (list "" (.Values | getOrNil "namespace") | join "--namespace=")
+          "get"
+          "--ignore-not-found"
+          "secret"
+          (tpl .Values.helpers.releaseName (list . "redis"))
+          "--output=go-template='{{index .data \"redis-password\" | base64decode}}'"
+        |compact | exec "kubectl" | trim
+      }}
+      - name: auth.password
+        value: {{ . }}
+      {{- end }}
+    values:
+      {{- with .Values
+          | getOrNil "global.persistentVolumeClaimRetentionPolicy"
+      }}
+      - master:
+          persistentVolumeClaimRetentionPolicy:
+            enabled: true
+            whenDeleted: {{ .whenDeleted }}
+        replica:
+          persistentVolumeClaimRetentionPolicy:
+            enabled: true
+            whenDeleted: {{ .whenDeleted }}
+        sentinel:
+          persistentVolumeClaimRetentionPolicy:
+            enabled: true
+            whenDeleted: {{ .whenDeleted }}
+      {{- end }}
+      {{- with .Values | getOrNil "redis" }}
+      - {{ . | toYaml | trim | nindent 8 }}
+      {{- end }}
+    version: 22.0.7

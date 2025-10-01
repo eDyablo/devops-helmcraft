@@ -1,2 +1,2 @@
 bases:
-  - {{ list .Values.rootDirPath "templates.yaml.gotmpl" | join "/" }}
+  - {{ list .Values.templatesDirPath "basic.yaml.gotmpl" | join "/" }}

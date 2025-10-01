@@ -1,0 +1,15 @@
+repositories:
+  - name: gitlab.io
+    url: http://charts.gitlab.io/
+
+templates:
+  gitlab:
+    inherit:
+      - template: basic
+    chart: gitlab.io/gitlab
+    name: {{ tpl .Values.helpers.releaseName (list . "gitlab") }}
+    values:
+      {{- with .Values | getOrNil "gitlab" }}
+      - {{ . | toYaml | trim | nindent 8 }}
+      {{- end }}
+    version: 9.4.1

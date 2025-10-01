@@ -1,0 +1,15 @@
+repositories:
+  - name: bitnami.com
+    url: https://charts.bitnami.com/bitnami/
+
+templates:
+  minio:
+    inherit:
+      - template: basic
+    chart: bitnami.com/minio
+    name: {{ tpl .Values.helpers.releaseName (list . "minio") }}
+    values:
+      {{- with .Values | getOrNil "minio" }}
+      - {{ . | toYaml | trim | nindent 8 }}
+      {{- end }}
+    version: 17.0.21

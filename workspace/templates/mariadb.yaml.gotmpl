@@ -1,0 +1,45 @@
+repositories:
+  - name: bitnami.com
+    url: https://charts.bitnami.com/bitnami/
+
+templates:
+  mariadb:
+    inherit:
+      - template: basic
+    chart: bitnami.com/mariadb
+    name: {{ tpl .Values.helpers.releaseName (list . "mariadb") }}
+    set:
+      {{- with
+          list
+            (.Values.kubeContext | printf "--context=%s")
+            (list "" (.Values | getOrNil "namespace") | join "--namespace=")
+            "get"
+            "--ignore-not-found"
+            "secret"
+            (tpl .Values.helpers.releaseName (list . "mariadb"))
+            "--output=go-template='{{index .data \"mariadb-root-password\" | base64decode}}'"
+          | compact | exec "kubectl" | trim
+        }}
+        - name: auth.rootPassword
+          value: {{ . }}
+        {{- end }}
+    strategicMergePatches:
+      {{- with .Values
+          | getOrNil "global.persistentVolumeClaimRetentionPolicy"
+      }}
+      - apiVersion: apps/v1
+        kind: StatefulSet
+        metadata:
+          name: {{ tpl .Values.helpers.releaseName (list $ "mariadb") }}
+          {{- with $.Values | getOrNil "namespace" }}
+          namespace: {{ . }}
+          {{- end }}
+        spec:
+          persistentVolumeClaimRetentionPolicy:
+            whenDeleted: {{ .whenDeleted }}
+      {{- end }}
+    values:
+      {{- with .Values | getOrNil "mariadb" }}
+      - {{ . | toYaml | trim | nindent 8 }}
+      {{- end }}
+    version: 22.0.0
