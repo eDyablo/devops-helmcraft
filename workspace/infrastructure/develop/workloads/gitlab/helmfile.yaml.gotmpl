@@ -1,0 +1,7 @@
+bases:
+  - {{ list .Values.rootDirPath "templates.yaml.gotmpl" | join "/" }}
+
+releases:
+  - inherit:
+      - template: gitlab
+    installed: false

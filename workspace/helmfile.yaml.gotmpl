@@ -1,0 +1,79 @@
+{{- $helmfileNamePattern := "helmfile\\.(yaml|yaml\\.gotmpl)$" }}
+
+{{- $rootDirPath := exec "pwd" list | trim }}
+{{- $infrastructureDirPath :=
+    list
+      $rootDirPath
+      (.Values | getOrNil "lookupDir" | default "infrastructure")
+    | join "/"
+}}
+{{- $pathList := list $infrastructureDirPath }}
+{{- $helmfileList := list}}
+{{- $maximumFileEntries := 12345 }}
+{{- range until $maximumFileEntries }}
+  {{- $currentPath := first $pathList }}
+  {{- $continueSearch := true}}
+  {{- range $filePath := readDir $currentPath }}
+    {{- if $filePath | splitList "/" | last | regexMatch $helmfileNamePattern }}
+      {{- $helmfileEntry := dict "path" $filePath }}
+      {{- $helmfileList = $helmfileEntry | append $helmfileList }}
+      {{- $continueSearch = true }}
+      {{- break }}
+    {{- end }}
+  {{- end }}
+  {{- if $continueSearch }}
+    {{- range $entry := readDirEntries $currentPath }}
+      {{- if $entry.IsDir }}
+        {{- $entryPath := list $currentPath $entry.Name | join "/" }}
+        {{- $pathList = $entryPath | append $pathList }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- $pathList = rest $pathList }}
+  {{- if empty $pathList }}
+    {{- break}}
+  {{- end }}
+{{- end }}
+
+{{- $valuesFileNamePattern := "^values\\.(yaml\\.gotmpl|yaml)$" }}
+
+{{- range $helmfileList }}
+  {{- $path := dir .path }}
+  {{- $environmentFileList := list }}
+  {{- $valuesFileList := list }}
+  {{- range until ($path | splitList "/" | len) }}
+    {{- $dirEntries := readDirEntries $path }}
+    {{- range $dirEntries }}
+      {{- if and (not .IsDir) (regexMatch $valuesFileNamePattern .Name) }}
+        {{- $valuesFilePath := list $path .Name | join "/" }}
+        {{- $valuesFileList = $valuesFilePath | append $valuesFileList }}
+        {{- break }}
+      {{- end }}
+    {{- end }}
+    {{- if (eq $path $infrastructureDirPath) }}
+      {{- break }}
+    {{- end }}
+    {{- $path = dir $path }}
+  {{- end}}
+  {{- $_ := set . "values" ($valuesFileList | reverse) }}
+  {{- $environment := dict "name" "default" }}
+  {{- range $environmentFileList }}
+    {{- $environmentName := dir . | trimPrefix $infrastructureDirPath
+        | trimAll "/" | replace "/" "-" }}
+    {{- $environment = merge (readFile . | fromYaml)
+        (dict "name" $environmentName) $environment }}
+  {{- end }}
+  {{- $environment := set . "environment" $environment }}
+{{- end }}
+
+helmfiles:
+{{- range $helmfileList }}
+  - path: {{ .path }}
+    values:
+      {{- with .values }}
+      {{- . | toYaml | trim | nindent 6 }}
+      {{- end }}
+      - helmfileDirPath: {{ .path | dir }}
+        infrastructureDirPath: {{ $infrastructureDirPath }}
+        rootDirPath: {{ $rootDirPath }}
+{{- end }}

@@ -6,10 +6,11 @@ brew install kind
 
 ```sh
 kind create cluster --name=dev
+kind create cluster --name=stage
 ```
 
 ```sh
-kind get clusters --all-clusters
+kind get clusters
 ```
 
 ```env
