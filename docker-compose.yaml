@@ -17,7 +17,7 @@ services:
     volumes:
       - ${HOST_AWS_PATH:-~/.aws}:/opt/.aws:ro
       - ${HOST_KUBE_CONFIG_PATH:-~/.kube/config}:/opt/.kube/config:ro
-      - ${HOST_WORKSPACE_DIR_PATH:-.}:/home/terminal/workspace:rw
+      - ${HOST_WORKSPACE_DIR_PATH:-./workspace}:/home/terminal/workspace:rw
       - cache:/home/telminal/.cache:rw
     working_dir: /home/terminal/workspace
 volumes:
