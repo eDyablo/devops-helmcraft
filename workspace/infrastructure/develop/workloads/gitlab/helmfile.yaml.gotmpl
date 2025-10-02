@@ -1,8 +1,2 @@
 bases:
   - {{ list .Values.templatesDirPath "basic.yaml.gotmpl" | join "/" }}
-  - {{ list .Values.templatesDirPath "gitlab.yaml.gotmpl" | join "/" }}
-
-releases:
-  - inherit:
-      - template: gitlab
-    installed: false
