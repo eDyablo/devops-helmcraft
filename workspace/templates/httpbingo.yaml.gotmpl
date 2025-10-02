@@ -1,0 +1,20 @@
+repositories:
+  - name: estahn.github.io
+    url: https://estahn.github.io/charts
+
+templates:
+  httpbingo:
+    inherit:
+      - template: basic
+    chart: estahn.github.io/httpbingo
+    name: {{ tpl .Values.helpers.releaseName (list . "httpbingo") }}
+    values:
+      {{- with .Values | getOrNil "global.containerImageRegistry" }}
+      {{- $containerImageRegistry := . | trimAll "/" }}
+      - image:
+          repository: {{ $containerImageRegistry }}/mccutchen/go-httpbin
+      {{- end }}
+      {{- with .Values | getOrNil "httpbingo" }}
+      - {{ . | toYaml | trim | nindent 8 }}
+      {{- end }}
+    version: 0.1.1
