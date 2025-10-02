@@ -30,7 +30,7 @@ templates:
       - apiVersion: apps/v1
         kind: StatefulSet
         metadata:
-          name: {{ tpl .Values.helpers.releaseName (list $ "mariadb") }}
+          name: {{ tpl $.Values.helpers.releaseName (list $ "mariadb") }}
           {{- with $.Values | getOrNil "namespace" }}
           namespace: {{ . }}
           {{- end }}
