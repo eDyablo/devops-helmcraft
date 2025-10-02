@@ -1,0 +1,30 @@
+repositories:
+  - name: kubernetes.github.io
+    url: https://kubernetes.github.io/dashboard
+
+templates:
+  kubernetes-dashboard:
+    inherit:
+      - template: basic
+    chart: kubernetes.github.io/kubernetes-dashboard
+    name: {{ tpl .Values.helpers.releaseName (list . "kubernetes-dashboard") }}
+    values:
+      {{- with .Values | getOrNil "global.containerImageRegistry" }}
+      {{- $containerImageRegistry := . | trimAll "/" }}
+      - api:
+          image:
+            repository: {{ $containerImageRegistry }}/kubernetesui/dashboard-api
+        auth:
+          image:
+            repository: {{ $containerImageRegistry }}/kubernetesui/dashboard-auth
+        metricsScraper:
+          image:
+            repository: {{ $containerImageRegistry }}/kubernetesui/dashboard-metrics-scraper
+        web:
+          image:
+            repository: {{ $containerImageRegistry }}/kubernetesui/dashboard-web
+      {{- end }}
+      {{- with .Values | getOrNil "kubernetesDashboard" }}
+      - {{ . | toYaml | trim | nindent 8 }}
+      {{- end }}
+    version: 7.13.0

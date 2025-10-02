@@ -1,0 +1,7 @@
+global:
+  {{- with env "GLOBAL_CONTAINER_IMAGE_REGISTRY" }}
+  containerImageRegistry: {{ . }}
+  {{- end }}
+gitlab:
+  certmanager-issuer:
+    email: eyablonsky+gitlab@gmail.com
