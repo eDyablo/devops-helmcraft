@@ -7,14 +7,16 @@ RUN true \
   && echo '@main https://dl-cdn.alpinelinux.org/alpine/edge/main' >> /etc/apk/repositories \
   && echo '@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories \
   && apk add --no-cache --update \
-    aws-cli \
-    bash \
-    curl \
-    git \
-    go-task \
-    jq \
-    k9s \
-    openssl \
+    aws-cli~=2.27 \
+    bash~=5.2 \
+    curl~=8.14 \
+    git~=2.49 \
+    go-task~=3.43 \
+    jq~=1.8 \
+    k9s~=0.50 \
+    openssh~=10.0 \
+    openssl~=3.5 \
+    yq~=4.47 \
   && true
 
 ENV HELM_VERSION=v3.19.0
