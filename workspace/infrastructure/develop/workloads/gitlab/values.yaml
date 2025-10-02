@@ -1,4 +1,0 @@
-namespace: gitlab
-gitlab:
-  nginx-ingress:
-    enabled: false
