@@ -1,0 +1,22 @@
+repositories:
+  - name: stefanprodan.github.io
+    url: https://stefanprodan.github.io/podinfo
+
+templates:
+  podinfo:
+    inherit:
+      - template: basic
+    chart: stefanprodan.github.io/podinfo
+    name: {{ tpl .Values.helpers.releaseName (list . "podinfo") }}
+    values:
+      {{- with .Values | getOrNil "global.containerImageRegistry" }}
+      {{- $containerImageRegistry := . | trimAll "/" }}
+      - image:
+          repository: {{ $containerImageRegistry }}/stefanprodan/podinfo
+        redis:
+          repository: {{ $containerImageRegistry }}/redis
+      {{- end }}
+      {{- with .Values | getOrNil "podinfo" }}
+      - {{ . | toYaml | trim | nindent 8 }}
+      {{- end }}
+    version: 6.9.2
