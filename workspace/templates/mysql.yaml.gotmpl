@@ -1,0 +1,30 @@
+repositories:
+  - name: bitnami.com
+    url: https://charts.bitnami.com/bitnami/
+
+templates:
+  mysql:
+    inherit:
+      - template: basic
+    chart: bitnami.com/mysql
+    values:
+      {{- with .Values | getOrNil "global.containerImageRegistry" }}
+      {{- $containerImageRegistry := . | trimAll "/" }}
+      - global:
+          security:
+            allowInsecureImages: true
+        image:
+          registry: {{ $containerImageRegistry }}
+        metrics:
+          image:
+            registry: {{ $containerImageRegistry }}
+        volumePermissions:
+          image:
+            registry: {{ $containerImageRegistry }}
+      {{- end }}
+      - image:
+          repository: bitnamilegacy/mysql
+      {{- with .Values | getOrNil "mysql" }}
+      - {{ . | toYaml | trim | nindent 8 }}
+      {{- end }}
+    version: 14.0.3
