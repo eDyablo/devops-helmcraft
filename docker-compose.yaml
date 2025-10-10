@@ -1,6 +1,3 @@
-networks:
-  kind:
-    external: true
 services:
   terminal:
     build:
@@ -12,8 +9,6 @@ services:
       KUBE_CLUSTER_SERVER_MAP: ${KUBE_CLUSTER_SERVER_MAP:-}
       KUBE_CONTEXT_LOCAL_DEVELOP: ${KUBE_CONTEXT_LOCAL_DEVELOP:-}
       KUBE_CONTEXT_LOCAL_STAGING: ${KUBE_CONTEXT_LOCAL_STAGING:-}
-    networks:
-      - kind
     volumes:
       - ${HOST_AWS_PATH:-~/.aws}:/opt/.aws:ro
       - ${HOST_KUBE_CONFIG_PATH:-~/.kube/config}:/opt/.kube/config:ro
