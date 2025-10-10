@@ -1,8 +1,0 @@
-bases:
-  - {{ list .Values.templatesDirPath "basic.yaml.gotmpl" | join "/" }}
-  - {{ list .Values.templatesDirPath "podinfo.yaml.gotmpl" | join "/" }}
-
-releases:
-  - inherit:
-      - template: podinfo
-    installed: true

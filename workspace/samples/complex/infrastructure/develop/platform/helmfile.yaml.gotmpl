@@ -1,0 +1,8 @@
+bases:
+  - {{ "templates/basic.yaml.gotmpl" | printf .Values.frameworkResourceLocator }}
+  - {{ "templates/kubernetes-dashboard.yaml.gotmpl" | printf .Values.frameworkResourceLocator }}
+
+releases:
+  - inherit:
+      - template: kubernetes-dashboard
+    installed: true

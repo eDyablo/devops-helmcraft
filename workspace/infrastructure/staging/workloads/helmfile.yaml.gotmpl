@@ -1,8 +1,0 @@
-bases:
-  - {{ list .Values.templatesDirPath "basic.yaml.gotmpl" | join "/" }}
-  - {{ list .Values.templatesDirPath "httpbingo.yaml.gotmpl" | join "/" }}
-
-releases:
-  - inherit:
-      - template: httpbingo
-    installed: true

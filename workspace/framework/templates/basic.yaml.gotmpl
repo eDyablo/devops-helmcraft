@@ -10,6 +10,7 @@ templates:
       {{- end }}
       context: {{ .Values.kubeContext }}
       path: {{
-		exec "pwd" list | trim | trimPrefix .Values.infrastructureDirPath
-		| trimAll "/"
+        exec "pwd" list | trim | trimPrefix 
+        (.Values.infrastructureDirPath | trimSuffix "." | trimSuffix "/")
+		    | trimPrefix "/" | default "."
       }}

@@ -1,0 +1,8 @@
+bases:
+  - {{ "templates/basic.yaml.gotmpl" | printf .Values.frameworkResourceLocator }}
+
+releases:
+  - chart: bitmani/nginx
+    inherit:
+      - template: basic
+    name: simple

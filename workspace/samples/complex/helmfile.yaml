@@ -1,0 +1,4 @@
+helmfiles:
+  - path: complex.yaml.gotmpl
+    values:
+      - frameworkResourceLocator: /home/terminal/workspace/framework/%s

@@ -1,0 +1,9 @@
+bases:
+  - {{ "templates/basic.yaml.gotmpl" | printf .Values.frameworkResourceLocator }}
+  - {{ "templates/mysql.yaml.gotmpl" | printf .Values.frameworkResourceLocator }}
+
+releases:
+  - inherit:
+      - template: mysql
+    name: {{ list . "first" | tpl .Values.helpers.releaseName }}
+    installed: true

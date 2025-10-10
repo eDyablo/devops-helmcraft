@@ -4,7 +4,7 @@
 {{- $infrastructureDirPath :=
     list
       $rootDirPath
-      (.Values | getOrNil "lookupDir" | default "infrastructure")
+      (.Values | getOrNil "helmfileLookupDir" | default "infrastructure")
     | join "/"
 }}
 {{- $pathList := list $infrastructureDirPath }}
