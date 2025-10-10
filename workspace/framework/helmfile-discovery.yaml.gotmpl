@@ -85,6 +85,14 @@ helmfiles:
           | join "/"
         }}
       - helpers:
+          getFrameworkResourcePath: |-
+            {{`{{- $context := index . 0 }}`}}
+            {{`{{- $inputPath := index . 1 }}`}}
+            {{`{{- if $context.Values | getOrNil "frameworkResourceLocator" }}`}}
+            {{`{{- printf $context.Values.frameworkResourceLocator $inputPath }}`}}
+            {{`{{- else }}`}}
+            {{`{{ $inputPath }}`}}
+            {{`{{- end }}`}}
           shortName: |-
             {{`{{- $length := index . 0 }}`}}
             {{`{{- $name := index . 1 }}`}}

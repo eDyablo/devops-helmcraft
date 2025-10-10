@@ -1,6 +1,6 @@
 bases:
-  - {{ "templates/basic.yaml.gotmpl" | printf .Values.frameworkResourceLocator }}
-  - {{ "templates/mysql.yaml.gotmpl" | printf .Values.frameworkResourceLocator }}
+  - {{ list . "templates/basic.yaml.gotmpl" | tpl .Values.helpers.getFrameworkResourcePath }}
+  - {{ list . "templates/mysql.yaml.gotmpl" | tpl .Values.helpers.getFrameworkResourcePath }}
 
 releases:
   - inherit:

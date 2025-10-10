@@ -1,6 +1,6 @@
 bases:
-  - {{ "templates/basic.yaml.gotmpl" | printf .Values.frameworkResourceLocator }}
-  - {{ "templates/podinfo.yaml.gotmpl" | printf .Values.frameworkResourceLocator }}
+  - {{ list . "templates/basic.yaml.gotmpl"  | tpl .Values.helpers.getFrameworkResourcePath }}
+  - {{ list . "templates/podinfo.yaml.gotmpl"  | tpl .Values.helpers.getFrameworkResourcePath }}
 
 releases:
   - inherit:

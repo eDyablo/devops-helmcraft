@@ -1,5 +1,5 @@
 bases:
-  - {{ "templates/basic.yaml.gotmpl" | printf .Values.frameworkResourceLocator }}
+  - {{ list . "templates/basic.yaml.gotmpl" | tpl .Values.helpers.getFrameworkResourcePath }}
 
 releases:
   - chart: bitmani/nginx
