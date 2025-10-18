@@ -1,4 +1,5 @@
 helmfiles:
-  - path: complex.yaml.gotmpl
+  - path: infrastructure/root.yaml.gotmpl
     values:
       - frameworkResourceLocator: /home/terminal/workspace/framework/%s
+      - helmfileLookupDir: .
