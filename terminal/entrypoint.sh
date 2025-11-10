@@ -1,8 +1,26 @@
-set -e
+#!/usr/bin/env bash
 
-mkdir -p ~/.aws && cp -r /opt/.aws ~/
+set -euo pipefail
 
-mkdir -p ~/.kube && cp /opt/.kube/config ~/.kube/config
+if [ -d "/opt/.ssh" ]; then
+  cp -r "/opt/.ssh" "$HOME"
+fi
+
+if [ -d "/opt/.aws" ]; then
+  cp -r "/opt/.aws" "$HOME"
+fi
+
+if [ -f "/opt/.kube/config" ]; then
+  KUBE_CONFIG_FILE_PATH="$HOME/.kube/config"
+  mkdir -p $(dirname "$KUBE_CONFIG_FILE_PATH")
+  cp "/opt/.kube/config" "$KUBE_CONFIG_FILE_PATH"
+fi
+
+if [ -f "/opt/.sops/age/keys.txt" ]; then
+  SOPS_AGE_KEYS_FILE_PATH="$HOME/.config/sops/age/keys.txt"
+  mkdir -p $(dirname "$SOPS_AGE_KEYS_FILE_PATH")
+  cp "/opt/.sops/age/keys.txt" "$SOPS_AGE_KEYS_FILE_PATH"
+fi
 
 echo $KUBE_CLUSTER_SERVER_MAP | tr -s ',' '\n' |
 while read KUBE_CLUSTER_SERVER_MAPPING; do
