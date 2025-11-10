@@ -1,0 +1,137 @@
+{{- $releaseDefinitionFileNamePattern := "^.+\\.(yaml|yaml\\.gotmpl)$" }}
+{{- $releaseSecretsFileNamePattern := "^.+\\.secrets\\.yaml$" }}
+{{- $nonReleaseDefinitionFileNamePattern :=
+  "^(helmfile|values|.+\\.secrets)\\.(yaml|yaml\\.gotmpl)$" }}
+{{- $releaseDirectoryDefinitionFileNamePattern :=
+  "/release\\.(yaml|yaml\\.gotmpl)$" }}
+{{- $releaseDirectoryValuesFileNamePattern :=
+  "/values\\.(yaml|yaml\\.gotmpl)$" }}
+{{- $releaseDirectorySecretsFileNamePattern := "/secrets\\.yaml$" }}
+
+{{- $releaseFiles := dict }}
+{{- $lookupDir := .Values | getOrNil "releaseLookupDirPath" | default "." }}
+{{- range $dirEntry := readDirEntries $lookupDir }}
+  {{- $dirEntryPath := list $lookupDir $dirEntry.Name | join "/" | clean }}
+  {{- if $dirEntry.IsDir }}
+    {{- range $filePath := readDir $dirEntryPath }}
+      {{- if $filePath | regexMatch 
+        $releaseDirectoryDefinitionFileNamePattern}}
+        {{- $entry := $releaseFiles | getOrNil $dirEntry.Name | default dict }}
+        {{- $_ := set $releaseFiles $dirEntry.Name
+          ($entry | merge (dict "definitionFilePath" $filePath )) }}
+      {{- end }}
+      {{- if $filePath | regexMatch 
+        $releaseDirectorySecretsFileNamePattern }}
+        {{- $entry := $releaseFiles | getOrNil $dirEntry.Name | default dict }}
+        {{- $_ := set $releaseFiles $dirEntry.Name
+          ($entry | merge (dict "secretsFilePath" $filePath )) }}
+      {{- end }}
+      {{- if $filePath | regexMatch 
+        $releaseDirectoryValuesFileNamePattern }}
+        {{- $entry := $releaseFiles | getOrNil $dirEntry.Name | default dict }}
+        {{- $_ := set $releaseFiles $dirEntry.Name
+          ($entry | merge (dict "valuesFilePath" $filePath )) }}
+      {{- end }}
+    {{- end }}
+  {{- else }}
+    {{- $name := $dirEntryPath | base | splitList "." | first }}
+    {{- if and
+        ($dirEntryPath | regexMatch $releaseDefinitionFileNamePattern)
+        (not ($dirEntryPath | regexMatch 
+          $nonReleaseDefinitionFileNamePattern)) }}
+      {{- $entry := $releaseFiles | getOrNil $name | default dict }}
+      {{- $_ := set $releaseFiles $name
+        ($entry | merge (dict "definitionFilePath" $dirEntryPath )) }}
+    {{- else if $dirEntryPath | regexMatch $releaseSecretsFileNamePattern }}
+      {{- $entry := $releaseFiles | getOrNil $name | default dict }}
+      {{- $_ := set $releaseFiles $name
+        ($entry | merge (dict "secretsFilePath" $dirEntryPath )) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- $releases := list }}
+{{- range $releaseName, $release := $releaseFiles }}
+  {{- $releaseDefinition := dict }}
+  {{- if eq ".gotmpl" (ext $release.definitionFilePath) }}
+    {{- $releaseDefinition = tpl (readFile $release.definitionFilePath) $
+      | fromYaml }}
+  {{- else }}
+    {{- $releaseDefinition = readFile $release.definitionFilePath | fromYaml }}
+  {{- end }}
+  {{- $releaseName := tpl $.Values.helpers.releaseName
+    (list
+      $
+      ($releaseDefinition | getOrNil "name" | default $releaseName
+      )
+    )
+  }}
+  {{- with $release | getOrNil "secretsFilePath" }}
+    {{- $releaseDefinition = $releaseDefinition |
+      merge (dict "secrets" (list .)) }}
+  {{- end }}
+  {{- with $release | getOrNil "valuesFilePath" }}
+    {{- $releaseDefinition = $releaseDefinition |
+      merge (dict "values" ($releaseDefinition | getOrNil "values" | default list | concat (list .))) }}
+  {{- end }}
+  {{- $release := dict
+      "definition" $releaseDefinition
+      "name" $releaseName
+      "namespace" ($releaseDefinition | getOrNil "namespace"
+        | default ($.Values | getOrNil "namespace"))
+  }}
+  {{- $releases = $release | append $releases }}
+{{- end }}
+
+{{- define "releaseTemplateName" -}}
+  {{- $release := index . 0 }}
+  {{- $templateFilePath := index . 1 }}
+  {{- list $release.name $templateFilePath | join " " }}
+{{- end }}
+
+templates:
+  {{- range $release := $releases }}
+  {{- if $release.definition }}
+  {{- with pick $release.definition "inherit" }}
+  {{- range .inherit }}
+  {{- with pick . "fromFile" }}
+  {{ include "releaseTemplateName" (list $release .fromFile) }}:
+    {{- if eq ".gotmpl" (ext .fromFile) }}
+    {{- tpl (readFile .fromFile)
+      (dict
+        "Release" (dict
+          "Name" $release.name
+          "Namespace" $release.namespace
+        )
+      )
+      | nindent 4
+    }}
+    {{- else }}
+    {{- readFile .fromFile | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+
+releases: 
+  {{- range $release := $releases }}
+  {{- if $release.definition }}
+  - name: {{ $release.name }}
+    {{- with omit $release.definition "inherit" "name" "kubeContext"}}
+    {{ . | toYaml | nindent 4 }}
+    {{- end }}
+  {{- with pick $release.definition "inherit" }}
+    inherit:
+      {{- range .inherit }}
+      {{- with pick . "template" }}
+      - template: {{ .template }}
+      {{- end }}
+      {{- with pick . "fromFile" }}
+      - template: {{ include "releaseTemplateName" (list $release .fromFile) }}
+      {{- end }}
+      {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- end }}

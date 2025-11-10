@@ -4,7 +4,7 @@
 {{- $infrastructureDirPath :=
     list
       $rootDirPath
-      (.Values | getOrNil "helmfileLookupDir" | default "infrastructure")
+      (.Values | getOrNil "helmfileLookupDirPath" | default "infrastructure")
     | join "/"
 }}
 {{- $pathList := list $infrastructureDirPath }}
@@ -36,11 +36,13 @@
 {{- end }}
 
 {{- $valuesFileNamePattern := "^values\\.(yaml\\.gotmpl|yaml)$" }}
+{{- $secretsFileNamePattern := "^secrets\\.yaml$" }}
 
 {{- range $helmfileList }}
   {{- $path := dir .path }}
   {{- $environmentFileList := list }}
   {{- $valuesFileList := list }}
+  {{- $secretsFileList := list }}
   {{- range until ($path | splitList "/" | len) }}
     {{- $dirEntries := readDirEntries $path }}
     {{- range $dirEntries }}
@@ -50,12 +52,20 @@
         {{- break }}
       {{- end }}
     {{- end }}
+    {{- range $dirEntries }}
+      {{- if and (not .IsDir) (regexMatch $secretsFileNamePattern .Name) }}
+        {{- $secretsFilePath := list $path .Name | join "/" }}
+        {{- $secretsFileList = $secretsFilePath | append $secretsFileList }}
+        {{- break }}
+      {{- end }}
+    {{- end }}
     {{- if (eq $path $infrastructureDirPath) }}
       {{- break }}
     {{- end }}
     {{- $path = dir $path }}
   {{- end}}
   {{- $_ := set . "values" ($valuesFileList | reverse) }}
+  {{- $_ := set . "secrets" ($secretsFileList | reverse) }}
   {{- $environment := dict "name" "default" }}
   {{- range $environmentFileList }}
     {{- $environmentName := dir . | trimPrefix $infrastructureDirPath
@@ -70,8 +80,11 @@ helmfiles:
 {{- range $helmfileList }}
   - path: {{ .path }}
     values:
-      - {{ omit $.Values | toYaml | nindent 8 }}
+      - {{ $.Values | toYaml | nindent 8 }}
       - rootDirPath: {{ $rootDirPath }}
+      {{- range .secrets }}
+      - {{- list "secrets" "decrypt" . | exec "helm" | trim | nindent 8 }}
+      {{- end }}
       {{- with .values }}
       {{- . | toYaml | trim | nindent 6 }}
       {{- end }}
@@ -85,11 +98,11 @@ helmfiles:
           | join "/"
         }}
       - helpers:
-          getFrameworkResourcePath: |-
+          getHelmcraftResourcePath: |-
             {{`{{- $context := index . 0 }}`}}
             {{`{{- $inputPath := index . 1 }}`}}
-            {{`{{- if $context.Values | getOrNil "frameworkResourceLocator" }}`}}
-            {{`{{- printf $context.Values.frameworkResourceLocator $inputPath }}`}}
+            {{`{{- if $context.Values | getOrNil "helmcraftResourceLocator" }}`}}
+            {{`{{- printf $context.Values.helmcraftResourceLocator $inputPath }}`}}
             {{`{{- else }}`}}
             {{`{{ $inputPath }}`}}
             {{`{{- end }}`}}

@@ -1,5 +1,5 @@
 helmfiles:
   - path: deploy/root.yaml.gotmpl
     values:
-      - frameworkResourceLocator: /home/terminal/workspace/framework/%s
-      - helmfileLookupDir: .
+      - helmcraftResourceLocator: /home/terminal/workspace/helmcraft/%s
+      - helmfileLookupDirPath: .

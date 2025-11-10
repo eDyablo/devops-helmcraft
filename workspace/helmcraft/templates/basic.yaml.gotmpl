@@ -1,0 +1,27 @@
+templates:
+  basic:
+    {{- with $namespace := .Values | getOrNil "namespace" }}
+    namespace: {{ $namespace }}
+    {{- end }}
+    {{- with $kubeContext := .Values | getOrNil "kubeContext" }}
+    kubeContext: {{ $kubeContext }}
+    {{- end }}
+    labels:
+      {{- with $labels := .Values | getOrNil "labels" }}
+      {{ $labels | toYaml | trim | nindent 6 }}
+      {{- end }}
+      context: {{ .Values.kubeContext }}
+      path: {{
+		    list | exec "pwd" | trim | trimPrefix .Values.infrastructureDirPath
+		      | trimAll "/"
+      }}
+  bitnami:
+    inherit:
+      - template: basic
+    values:
+      {{- with $registry := .Values | getOrNil "global.containerImageRegistry" }}
+      - global:
+          imageRegistry: {{ $registry }}
+          security:
+            allowInsecureImages: true
+      {{- end }}
